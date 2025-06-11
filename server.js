@@ -1,51 +1,19 @@
 const express = require("express");
 const cors = require("cors");
-const http = require("http");
-const { Server } = require("socket.io");
 const session = require("express-session");
 const passport = require("passport");
-const LocalStrategy = require("passport-local").Strategy;
-const bcrypt = require("bcrypt");
+const dotenv = require("dotenv");
 const { authenticateUser, ensureAuthenticated } = require("./middleware/auth");
-require("dotenv").config({ path: `.env.${process.env.NODE_ENV}` });
-const users = [{ id: 1, username: "Jake3496", password: "jcowkaido" }];
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
+const runMongoConfig = require("./configurations/mongo");
+const runPassportConfig = require("./configurations/passport");
+const runWebSocketConfig = require("./configurations/websockets");
 
 const app = express();
-const server = http.createServer(app);
 
-passport.use(
-  new LocalStrategy((username, password, done) => {
-    const user = users.find(u => u.username === username);
-    if (!user) return done(null, false, { message: "Incorrect username" });
-
-    if (password === user.password) {
-      return done(null, user);
-    }
-
-    return done(null, false, { message: "Incorrect password" });
-    // bcrypt.compare(password, user.password, (err, result) => {
-    //   if (err) return done(err);
-    //   if (!result) return done(null, false, { message: "Incorrect password." });
-    //   return done(null, user);
-    // });
-  })
-);
-
-passport.serializeUser((user, done) => {
-  done(null, user.id);
-});
-
-passport.deserializeUser((id, done) => {
-  const user = users.find(u => u.id === id);
-  done(null, user);
-});
-
-const io = new Server(server, {
-  cors: {
-    origin: "http://localhost:3000",
-    methods: ["GET", "POST"],
-  },
-});
+const server = runWebSocketConfig(app);
+runMongoConfig();
+runPassportConfig();
 
 app.use(
   session({
@@ -61,19 +29,6 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Allows url encoded form data
-
-io.on("connection", socket => {
-  console.log("a user connected");
-
-  socket.on("client-message", msg => {
-    console.log("client says:", msg);
-    socket.emit("server-message", "Welcome!");
-  });
-
-  socket.emit("server-message", "Welcome!");
-});
 
 app.get("/", ensureAuthenticated, (req, res) => {
   console.log("Session: ", req.session);
@@ -120,6 +75,5 @@ app.get("/trash", ensureAuthenticated, (_, res) => {
 });
 
 server.listen(process.env.PORT, () => {
-  console.log(`WebSocket Started on port ${process.env.PORT}`);
-  console.log(`Current environment is ${process.env.NODE_ENV}`);
+  console.log("Server started...");
 });
