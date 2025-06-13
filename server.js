@@ -4,10 +4,12 @@ const session = require("express-session");
 const passport = require("passport");
 const dotenv = require("dotenv");
 const { authenticateUser, ensureAuthenticated } = require("./middleware/auth");
+const httpLogger = require("./middleware/httpLogger");
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 const runMongoConfig = require("./configurations/mongo");
 const runPassportConfig = require("./configurations/passport");
 const runWebSocketConfig = require("./configurations/websockets");
+const logger = require("./utilities/logger");
 
 const app = express();
 
@@ -29,51 +31,54 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(httpLogger);
 
-app.get("/", ensureAuthenticated, (req, res) => {
-  console.log("Session: ", req.session);
-  console.log("User: ", req.user);
+app.get("/", (req, res) => {
   res.json(req.user);
 });
 
-app.get("/login", (req, res) => {
-  res.send(req.user);
+app.get("/status", (_, res) => {
+  res.status(200).json({ status: "OK", uptime: process.uptime() });
 });
 
-app.post("/login", authenticateUser);
+app.get("/login", (req, res) => {
+  logger.error(
+    "User cannot log in; No database connected with valid collection."
+  );
+  res.sendStatus(501);
+});
+
+app.post("/login", authenticateUser, (req, res) => {
+  logger.error(
+    "User cannot log in; No database connected with valid collection."
+  );
+  res.sendStatus(501);
+});
 
 // TODO: Implement these as POST requests later.
 app.get("/soil", ensureAuthenticated, (_, res) => {
-  res.send("<h1>Hello World</h1>");
+  logger.warn("Endpoint unavailable");
+  res.sendStatus(501);
 });
 
 app.get("/weather", ensureAuthenticated, (_, res) => {
-  res.send("<h1>Hello World</h1>");
+  logger.warn("Endpoint unavailable");
+  res.sendStatus(501);
 });
 
 app.post("/weather", ensureAuthenticated, (req, res) => {
-  io.emit("weather", {
-    temp_c: 20.0,
-    temp_f: 34.0,
-    humidity: 22,
-    pressure: 14,
-  });
-  console.log(req.body);
-  res.status(200).send("<h1>Hello World</h1>");
-});
-
-app.get("/pressure", ensureAuthenticated, (_, res) => {
-  res.send("<h1>Hello World</h1>");
+  logger.warn("Endpoint unavailable");
+  res.sendStatus(501);
 });
 
 app.get("/lights", ensureAuthenticated, (_, res) => {
-  res.send("<h1>Hello World</h1>");
+  res.sendStatus(501);
 });
 
 app.get("/trash", ensureAuthenticated, (_, res) => {
-  res.send("<h1>Hello World</h1>");
+  res.sendStatus(501);
 });
 
 server.listen(process.env.PORT, () => {
-  console.log("Server started...");
+  logger.info("Server has started...");
 });
