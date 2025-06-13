@@ -3,15 +3,18 @@ const cors = require("cors");
 const session = require("express-session");
 const passport = require("passport");
 const dotenv = require("dotenv");
+
 const { authenticateUser, ensureAuthenticated } = require("./middleware/auth");
 const httpLogger = require("./middleware/httpLogger");
-dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
+
 const runMongoConfig = require("./configurations/mongo");
 const runPassportConfig = require("./configurations/passport");
 const runWebSocketConfig = require("./configurations/websockets");
+
 const logger = require("./utilities/logger");
 
 const app = express();
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
 const server = runWebSocketConfig(app);
 runMongoConfig();
