@@ -5,7 +5,7 @@ const mongoose = require("mongoose");
 // Reading        Reading gathered from sensor
 // Timestamp      Current timestamp of creation/update
 
-const soilSensorSchema = mongoose.Schema({
+const soilSensorSchema = new mongoose.Schema({
   sensor_id: String,
   zone_id: String,
   location: String,
@@ -13,6 +13,6 @@ const soilSensorSchema = mongoose.Schema({
   timestamp: { type: Date, default: Date.now },
 });
 
-const SoilSensor = mongoose.Model("SoilSensor", soilSensorSchema);
+const SoilSensor = mongoose.model("SoilSensor", soilSensorSchema);
 
 module.exports = SoilSensor;
