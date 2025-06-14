@@ -35,13 +35,6 @@ module.exports = app => {
       handleSensorMessages(ws, req, message);
       handleAdminMessages(ws, req, message);
       handleClientMessages(ws, req, message);
-      // if (ensureAuthorizedUser(ws, req)) {
-      //   // Send feedback to user that is authorized but not an admin
-      //   logger.info("Authorized User!");
-      //   // TODO: Implement handling of sending all data to client
-      //   // handleClientData()
-      //   ws.send("Sending client data...");
-      // }
     });
 
     // Handles closed connections.
